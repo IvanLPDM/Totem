@@ -2,9 +2,12 @@ using UnityEngine;
 
 public class Movement : MonoBehaviour
 {
+    [Header("Movement")]
     public float moveSpeed = 5f;
-    public float jumpForce = 15f;
-    public float maxJumpTime = 0.35f; // Duración máxima del salto mantenido
+
+    [Header("Jump")]
+    public float jumpForce = 12f;
+    public float maxJumpTime = 0.2f; 
 
     private Rigidbody2D rb;
     private float moveDirection = 0f;
@@ -12,7 +15,7 @@ public class Movement : MonoBehaviour
     public bool isJumping = false;
     private float jumpTimeCounter;
 
-    public float coyoteTime = 0.2f;
+    public float coyoteTime = 0.06f;
     private float coyoteTimeCounter;
 
     public float jumpBufferTime = 0.1f;
@@ -21,11 +24,10 @@ public class Movement : MonoBehaviour
     public LayerMask groundLayer;
     public Collider2D groundCheck;
 
+    [Header("Lateral Collision")]
     public Collider2D wallCheck_R;
     public Collider2D wallCheck_L;
     public LayerMask wallLayer;
-
-    public bool is_touching = false;
 
 
     void Start()
