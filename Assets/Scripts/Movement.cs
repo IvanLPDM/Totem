@@ -4,6 +4,7 @@ public class Movement : MonoBehaviour
 {
     [Header("Movement")]
     public float moveSpeed = 5f;
+    public Animator animator;
 
     [Header("Jump")]
     public float jumpForce = 12f;
@@ -99,6 +100,17 @@ public class Movement : MonoBehaviour
         }
 
         rb.velocity = new Vector2(targetVelocityX, rb.velocity.y);
+
+        if(rb.velocity.x > 0f)
+        {
+            transform.localScale = new Vector3(-1,1,1);
+        } 
+        if(rb.velocity.x < 0f)
+        {
+            transform.localScale = new Vector3(1,1,1);
+        }
+
+        animator.SetFloat("movement", rb.velocity.x);
     }
 
     // Detectar si está en el suelo
