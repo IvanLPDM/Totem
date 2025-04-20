@@ -1,3 +1,4 @@
+using System.Collections;
 using UnityEngine;
 
 public class Movement : MonoBehaviour
@@ -11,6 +12,7 @@ public class Movement : MonoBehaviour
     public float maxJumpTime = 0.2f; 
 
     private Rigidbody2D rb;
+    private SpriteRenderer sr;
     private float moveDirection = 0f;
 
     public bool isJumping = false;
@@ -25,21 +27,42 @@ public class Movement : MonoBehaviour
     public LayerMask groundLayer;
     public Collider2D groundCheck;
 
+    public Collider2D checkRoof;
+
     [Header("Lateral Collision")]
     public Collider2D wallCheck_R;
     public Collider2D wallCheck_L;
     public LayerMask wallLayer;
 
+    [Header("Attack")]
+    private bool atacking;
+    public GameObject attackHitbox;
+    public float attackDuration = 0.3f; 
 
     void Start()
     {
         rb = GetComponent<Rigidbody2D>();
+        sr = GetComponent<SpriteRenderer>();
     }
 
     void Update()
     {
         // Movimiento lateral
-        moveDirection = Input.GetAxisRaw("Horizontal");
+        float sensibility = 0.2f; // sensibilidad mínima
+        float rawInput = Input.GetAxis("Horizontal");
+
+        if (rawInput > sensibility)
+        {
+            moveDirection = 1f;
+        }
+        else if (rawInput < -sensibility)
+        {
+            moveDirection = -1f;
+        }
+        else
+        {
+            moveDirection = 0f;
+        }
 
         // Coyote Time
         if (IsGrounded())
@@ -67,7 +90,7 @@ public class Movement : MonoBehaviour
         }
 
         // Mantener salto (mientras se mantenga presionado el botón X)
-        if (Input.GetKey(KeyCode.JoystickButton1) && isJumping)
+        if (Input.GetKey(KeyCode.JoystickButton1) && isJumping && !IsRoof())
         {
             if (jumpTimeCounter > 0)
             {
@@ -79,6 +102,8 @@ public class Movement : MonoBehaviour
                 isJumping = false;
             }
         }
+        else
+            isJumping = false;
 
         // Soltar salto
         if (Input.GetKeyUp(KeyCode.JoystickButton1))
@@ -86,6 +111,11 @@ public class Movement : MonoBehaviour
             isJumping = false;
         }
 
+        //Atack
+        if (Input.GetKeyDown(KeyCode.JoystickButton0))
+        {
+            StartCoroutine(Attack());
+        }
 
     }
 
@@ -93,7 +123,7 @@ public class Movement : MonoBehaviour
     {
         float targetVelocityX = moveDirection * moveSpeed;
 
-        if ((IsTouchingWall_R() && moveDirection > 0) || (IsTouchingWall_L() && moveDirection < 0))
+        if (!IsGrounded() && ((IsTouchingWall_R() && moveDirection > 0) || (IsTouchingWall_L() && moveDirection < 0)))
         {
             // Bloquea solo si intenta moverse hacia la pared
             targetVelocityX = 0;
@@ -101,23 +131,46 @@ public class Movement : MonoBehaviour
 
         rb.velocity = new Vector2(targetVelocityX, rb.velocity.y);
 
-        if(rb.velocity.x > 0f)
+
+        if (rb.velocity.x > 0f)
         {
-            transform.localScale = new Vector3(-1,1,1);
-        } 
-        if(rb.velocity.x < 0f)
+            sr.flipX = true;
+        }
+        if (rb.velocity.x < 0f)
         {
-            transform.localScale = new Vector3(1,1,1);
+            sr.flipX = false;
         }
 
         animator.SetFloat("movement", rb.velocity.x);
+        animator.SetFloat("falling", rb.velocity.y);
+        animator.SetBool("ground", IsGrounded());
     }
+
+
+
+    IEnumerator Attack()
+    {
+        atacking = true;
+        animator.SetTrigger("attack");
+
+        attackHitbox.SetActive(true); // Activa la hitbox
+        yield return new WaitForSeconds(0.1f); // Espera 2 segundos
+        attackHitbox.SetActive(false); // Luego se desactiva
+
+        atacking = false;
+    }
+
+
 
     // Detectar si está en el suelo
     bool IsGrounded()
     {
        return groundCheck.IsTouchingLayers(groundLayer);
-        
+    }
+    
+    bool IsRoof()
+    {
+       return checkRoof.IsTouchingLayers(groundLayer);
     }
 
     bool IsTouchingWall_L()
