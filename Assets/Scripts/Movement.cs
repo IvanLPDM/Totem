@@ -37,7 +37,14 @@ public class Movement : MonoBehaviour
     [Header("Attack")]
     private bool atacking;
     public GameObject attackHitbox;
-    public float attackDuration = 0.3f; 
+    public float attackDuration = 0.3f;
+    public Transform swordHolder;
+
+    [Header("Stats")]
+    public float health;
+
+    [Header("Sounds")]
+    public SFX_Manager sfx;
 
     void Start()
     {
@@ -62,6 +69,11 @@ public class Movement : MonoBehaviour
         else
         {
             moveDirection = 0f;
+        }
+
+        if(moveDirection!=0)
+        {
+            Flip(moveDirection);
         }
 
         // Coyote Time
@@ -146,20 +158,35 @@ public class Movement : MonoBehaviour
         animator.SetBool("ground", IsGrounded());
     }
 
-
-
     IEnumerator Attack()
     {
         atacking = true;
         animator.SetTrigger("attack");
+        attackHitbox.GetComponent<Sword>().EnableCollider();
 
-        attackHitbox.SetActive(true); // Activa la hitbox
         yield return new WaitForSeconds(0.1f); // Espera 2 segundos
-        attackHitbox.SetActive(false); // Luego se desactiva
+        attackHitbox.GetComponent<Sword>().DisableCollider();
 
         atacking = false;
     }
 
+    public void TakeDamage(float damage)
+    {
+        health = health - damage;
+    }
+
+    void Flip(float direction)
+    {   
+        Vector3 holderScale = swordHolder.localScale;
+        holderScale.x = Mathf.Abs(holderScale.x) * direction;
+        swordHolder.localScale = holderScale;
+    }
+
+
+    public void PlayGroundSound()
+    {
+        sfx.Play_ground_sound();
+    }
 
 
     // Detectar si está en el suelo
